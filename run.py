@@ -163,6 +163,12 @@ class MainHook:
 class SaveApplyPatchHook(MainHook):
     """This hook saves patches to a separate directory and optionally applies them to a local repository."""
 
+
+    @staticmethod
+    def _is_promising_patch(info: dict[str, Any]) -> bool:
+        """Consider patches as promising if there's a submission, regardless of exit_status."""
+        return info.get("submission") is not None
+        
     def on_init(self, *, args: ScriptArguments, agent: Agent, env: SWEEnv, traj_dir: Path):
         self._traj_dir = traj_dir
         self._apply_patch_locally = args.actions.apply_patch_locally
@@ -172,19 +178,14 @@ class SaveApplyPatchHook(MainHook):
         self._instance = instance
 
     def on_instance_completed(self, *, info, trajectory):
-        assert self._instance is not None  # mypy
         instance_id = self._instance["instance_id"]
         patch_path = self._save_patch(instance_id, info)
-        if patch_path:
-            if not self._apply_patch_locally:
-                return
-            if not self._is_promising_patch(info):
-                return
-            assert self._instance  # mypy
+        if patch_path and self._apply_patch_locally:
             if self._instance["repo_type"] != "local":
                 return
             local_dir = Path(self._instance["repo"])
             self._apply_patch(patch_path, local_dir)
+
 
     @staticmethod
     def _print_patch_message(patch_output_file: Path):
@@ -246,10 +247,8 @@ class SaveApplyPatchHook(MainHook):
             return
         logger.info(f"Applied patch {patch_file} to {local_dir}")
 
-    @staticmethod
-    def _is_promising_patch(info: dict[str, Any]) -> bool:
-        """Always consider the patch promising."""
-        return True
+
+
 
     def apply_patch_on_exit(self):
         print("Applying patch on exit <outside>")
@@ -403,14 +402,32 @@ class Main:
                     self.run(index)
                 except _ContinueLoop:
                     continue
-                except KeyboardInterrupt:
-                    logger.info("Exiting InterCode environment...")
-                    break
+                except KeyboardInterrupt as e:
+                    logger.info("Exiting InterCode environment due to KeyboardInterrupt...")
+                    # Get the last known info and trajectory
+                    info = self.env.get_info()
+                    trajectory = self.agent.get_trajectory()
+                    # Call on_instance_completed for hooks
+                    for hook in self.hooks:
+                        hook.on_instance_completed(info=info, trajectory=trajectory)
+                    break  # Exit the loop after handling the interrupt
                 except SystemExit:
                     logger.critical("❌ Exiting because SystemExit was called")
-                    break
+                    # Get the last known info and trajectory
+                    info = self.env.get_info()
+                    trajectory = self.agent.get_trajectory()
+                    # Call on_instance_completed for hooks
+                    for hook in self.hooks:
+                        hook.on_instance_completed(info=info, trajectory=trajectory)
+                    break  # Exit the loop after handling SystemExit
                 except Exception as e:
                     logger.warning(traceback.format_exc())
+                    # Get the last known info and trajectory
+                    info = self.env.get_info()
+                    trajectory = self.agent.get_trajectory()
+                    # Call on_instance_completed for hooks
+                    for hook in self.hooks:
+                        hook.on_instance_completed(info=info, trajectory=trajectory)
                     if self.args.raise_exceptions:
                         self.env.close()
                         raise e
@@ -421,11 +438,8 @@ class Main:
                     self.env.reset_container()
                     continue
         finally:
-            print("Entering finally")
             self.env.close()
             for hook in self.hooks:
-                if isinstance(hook, SaveApplyPatchHook):
-                    hook.apply_patch_on_exit()
                 hook.on_end()
 
     def _save_arguments(self) -> None:
