@@ -169,7 +169,7 @@ class MainHook:
 
 
 class SaveApplyPatchHook(MainHook):
-    """This hook saves patches to a separate directory and optionally applies them to a local repository."""
+    """This hook saves patches to a separate directory and applies them to a local repository."""
 
     def on_init(self, *, args: ScriptArguments, agent: Agent, env: SWEEnv, traj_dir: Path):
         self._traj_dir = traj_dir
@@ -183,16 +183,11 @@ class SaveApplyPatchHook(MainHook):
         assert self._instance is not None  # mypy
         instance_id = self._instance["instance_id"]
         patch_path = self._save_patch(instance_id, info)
-        if patch_path:
-            if not self._apply_patch_locally:
-                return
-            if not self._is_promising_patch(info):
-                return
+        if patch_path and self._apply_patch_locally:
             assert self._instance  # mypy
-            if self._instance["repo_type"] != "local":
-                return
-            local_dir = Path(self._instance["repo"])
-            self._apply_patch(patch_path, local_dir)
+            if self._instance["repo_type"] == "local":
+                local_dir = Path(self._instance["repo"])
+                self._apply_patch(patch_path, local_dir)
 
     @staticmethod
     def _print_patch_message(patch_output_file: Path):
@@ -233,10 +228,7 @@ class SaveApplyPatchHook(MainHook):
             return None
         model_patch = info["submission"]
         patch_output_file.write_text(model_patch)
-        if self._is_promising_patch(info):
-            # Only print big congratulations if we actually believe
-            # the patch will solve the issue
-            self._print_patch_message(patch_output_file)
+        self._print_patch_message(patch_output_file)
         return patch_output_file
 
     def _apply_patch(self, patch_file: Path, local_dir: Path) -> None:
