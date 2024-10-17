@@ -19,4 +19,4 @@ python run.py \
 # --config_file ...                 # Path to the configuration file - contains system prompt and instance template
 # --per_instance_cost_limit ...    # Cost limit per instance
 # --apply_patch_locally ...         # Apply patch locally (i believe only on the repo in the docker for now)
-# --environment_setup ...         # install additional python dependencies like flask, pytest (not 100% sure if this works)
+# --environment_setup ...         # install additional python dependencies like flask, pytest (not 100%sure if this works)
