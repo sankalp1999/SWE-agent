@@ -139,14 +139,6 @@ class _ContinueLoop(Exception):
 class MainHook:
     """Hook structure for the web server or other addons to interface with"""
 
-    @staticmethod
-    def _is_promising_patch(info: dict[str, Any]) -> bool:
-        """Do we actually believe that the patch will solve the issue?
-        Or are we just submitting the last patch we generated before hitting an error?
-        """
-        # The exit status can also be `submitted (exit_cost)` etc.
-        return info["exit_status"] == "submitted" and info.get("submission") is not None
-
     def on_init(self, *, args: ScriptArguments, agent: Agent, env: SWEEnv, traj_dir: Path):
         """Called when hook is initialized"""
 
@@ -171,6 +163,12 @@ class MainHook:
 class SaveApplyPatchHook(MainHook):
     """This hook saves patches to a separate directory and optionally applies them to a local repository."""
 
+
+    @staticmethod
+    def _is_promising_patch(info: dict[str, Any]) -> bool:
+        """Consider patches as promising if there's a submission, regardless of exit_status."""
+        return info.get("submission") is not None
+        
     def on_init(self, *, args: ScriptArguments, agent: Agent, env: SWEEnv, traj_dir: Path):
         self._traj_dir = traj_dir
         self._apply_patch_locally = args.actions.apply_patch_locally
@@ -180,19 +178,14 @@ class SaveApplyPatchHook(MainHook):
         self._instance = instance
 
     def on_instance_completed(self, *, info, trajectory):
-        assert self._instance is not None  # mypy
         instance_id = self._instance["instance_id"]
         patch_path = self._save_patch(instance_id, info)
-        if patch_path:
-            if not self._apply_patch_locally:
-                return
-            if not self._is_promising_patch(info):
-                return
-            assert self._instance  # mypy
+        if patch_path and self._apply_patch_locally:
             if self._instance["repo_type"] != "local":
                 return
             local_dir = Path(self._instance["repo"])
             self._apply_patch(patch_path, local_dir)
+
 
     @staticmethod
     def _print_patch_message(patch_output_file: Path):
@@ -253,6 +246,19 @@ class SaveApplyPatchHook(MainHook):
             logger.error(f"Failed to apply patch {patch_file} to {local_dir}: {e}")
             return
         logger.info(f"Applied patch {patch_file} to {local_dir}")
+
+
+
+
+    def apply_patch_on_exit(self):
+        print("Applying patch on exit <outside>")
+        if self._instance and self._instance["repo_type"] == "local":
+            print("Applying patch on exit")
+            local_dir = Path(self._instance["repo"])
+            patch_dir = self._traj_dir / "patches"
+            latest_patch = max(patch_dir.glob("*.patch"), key=lambda x: x.stat().st_mtime, default=None)
+            if latest_patch:
+                self._apply_patch(latest_patch, local_dir)
 
 
 class OpenPRHook(MainHook):
@@ -390,34 +396,51 @@ class Main:
     def main(self):
         for hook in self.hooks:
             hook.on_start()
-        for index in range(len(self.env.data)):
-            try:
-                self.run(index)
-            except _ContinueLoop:
-                continue
-            except KeyboardInterrupt:
-                logger.info("Exiting InterCode environment...")
-                self.env.close()
-                break
-            except SystemExit:
-                logger.critical("❌ Exiting because SystemExit was called")
-                self.env.close()
-                logger.info("Container closed")
-                raise
-            except Exception as e:
-                logger.warning(traceback.format_exc())
-                if self.args.raise_exceptions:
-                    self.env.close()
-                    raise e
-                if self.env.record:
-                    logger.warning(f"❌ Failed on {self.env.record['instance_id']}: {e}")
-                else:
-                    logger.warning("❌ Failed on unknown instance")
-                self.env.reset_container()
-                continue
-        self.env.close()
-        for hook in self.hooks:
-            hook.on_end()
+        try:
+            for index in range(len(self.env.data)):
+                try:
+                    self.run(index)
+                except _ContinueLoop:
+                    continue
+                except KeyboardInterrupt as e:
+                    logger.info("Exiting InterCode environment due to KeyboardInterrupt...")
+                    # Get the last known info and trajectory
+                    info = self.env.get_info()
+                    trajectory = self.agent.get_trajectory()
+                    # Call on_instance_completed for hooks
+                    for hook in self.hooks:
+                        hook.on_instance_completed(info=info, trajectory=trajectory)
+                    break  # Exit the loop after handling the interrupt
+                except SystemExit:
+                    logger.critical("❌ Exiting because SystemExit was called")
+                    # Get the last known info and trajectory
+                    info = self.env.get_info()
+                    trajectory = self.agent.get_trajectory()
+                    # Call on_instance_completed for hooks
+                    for hook in self.hooks:
+                        hook.on_instance_completed(info=info, trajectory=trajectory)
+                    break  # Exit the loop after handling SystemExit
+                except Exception as e:
+                    logger.warning(traceback.format_exc())
+                    # Get the last known info and trajectory
+                    info = self.env.get_info()
+                    trajectory = self.agent.get_trajectory()
+                    # Call on_instance_completed for hooks
+                    for hook in self.hooks:
+                        hook.on_instance_completed(info=info, trajectory=trajectory)
+                    if self.args.raise_exceptions:
+                        self.env.close()
+                        raise e
+                    if self.env.record:
+                        logger.warning(f"❌ Failed on {self.env.record['instance_id']}: {e}")
+                    else:
+                        logger.warning("❌ Failed on unknown instance")
+                    self.env.reset_container()
+                    continue
+        finally:
+            self.env.close()
+            for hook in self.hooks:
+                hook.on_end()
 
     def _save_arguments(self) -> None:
         """Save the arguments to a yaml file to the run's trajectory directory."""

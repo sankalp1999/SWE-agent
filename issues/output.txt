@@ -1,0 +1,1007 @@
+Error running test_script.py: ============================= test session starts ==============================
+platform darwin -- Python 3.12.6, pytest-8.3.3, pluggy-1.5.0 -- /Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/sankalp/Documents/question_generator/project_question_generator/project_questions
+configfile: pyproject.toml
+plugins: anyio-4.6.0
+collecting ... collected 10 items
+
+output_restaurant_mgmt_system_flask/test_script.py::test_directory_structure PASSED [ 10%]
+output_restaurant_mgmt_system_flask/test_script.py::test_essential_files PASSED [ 20%]
+output_restaurant_mgmt_system_flask/test_script.py::test_models PASSED   [ 30%]
+output_restaurant_mgmt_system_flask/test_script.py::test_routes PASSED   [ 40%]
+output_restaurant_mgmt_system_flask/test_script.py::test_database PASSED [ 50%]
+output_restaurant_mgmt_system_flask/test_script.py::test_get_all_items FAILED [ 60%]
+output_restaurant_mgmt_system_flask/test_script.py::test_create_new_item FAILED [ 70%]
+output_restaurant_mgmt_system_flask/test_script.py::test_get_item_by_id FAILED [ 80%]
+output_restaurant_mgmt_system_flask/test_script.py::test_delete_item_by_id FAILED [ 90%]
+output_restaurant_mgmt_system_flask/test_script.py::test_handle_invalid_input_for_create_item FAILED [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_get_all_items ______________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x105de00e0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x106edb980>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x108181190>
+parameters = [()]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x108167c40>
+statement = 'SELECT menu_item.id AS menu_item_id, menu_item.name AS menu_item_name, menu_item.description AS menu_item_description \nFROM menu_item'
+parameters = ()
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x106edb980>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: menu_item
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+client = <FlaskClient <Flask 'app'>>
+
+    def test_get_all_items(client):
+>       response = client.get('/menu_items')
+
+output_restaurant_mgmt_system_flask/test_script.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1162: in get
+    return self.open(*args, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/testing.py:235: in open
+    response = super().open(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1116: in open
+    response_parts = self.run_wsgi_app(request.environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:988: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1264: in run_wsgi_app
+    app_rv = app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1498: in __call__
+    return self.wsgi_app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1476: in wsgi_app
+    response = self.handle_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1473: in wsgi_app
+    response = self.full_dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:882: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:880: in full_dispatch_request
+    rv = self.dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:865: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+output_restaurant_mgmt_system_flask/app/routes.py:9: in get_menu_items
+    menu_items = MenuItem.query.all()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/query.py:2673: in all
+    return self._iter().all()  # type: ignore
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/query.py:2827: in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2362: in execute
+    return self._execute_internal(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2247: in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/context.py:305: in orm_execute_statement
+    result = conn.execute(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x108167c40>
+statement = 'SELECT menu_item.id AS menu_item_id, menu_item.name AS menu_item_name, menu_item.description AS menu_item_description \nFROM menu_item'
+parameters = ()
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x106edb980>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: menu_item
+E       [SQL: SELECT menu_item.id AS menu_item_id, menu_item.name AS menu_item_name, menu_item.description AS menu_item_description 
+E       FROM menu_item]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+_____________________________ test_create_new_item _____________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x1081d8440>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x106b026f0>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x108152060>
+parameters = [('Test Item', 'Test Description')]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x10985cec0>
+statement = 'INSERT INTO menu_item (name, description) VALUES (?, ?)'
+parameters = ('Test Item', 'Test Description')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x106b026f0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: menu_item
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+client = <FlaskClient <Flask 'app'>>
+
+    def test_create_new_item(client):
+        new_item = {"name": "Test Item", "description": "Test Description"}
+>       response = client.post('/menu_items', json=new_item)
+
+output_restaurant_mgmt_system_flask/test_script.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1167: in post
+    return self.open(*args, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/testing.py:235: in open
+    response = super().open(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1116: in open
+    response_parts = self.run_wsgi_app(request.environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:988: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1264: in run_wsgi_app
+    app_rv = app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1498: in __call__
+    return self.wsgi_app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1476: in wsgi_app
+    response = self.handle_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1473: in wsgi_app
+    response = self.full_dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:882: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:880: in full_dispatch_request
+    rv = self.dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:865: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+output_restaurant_mgmt_system_flask/app/routes.py:17: in create_menu_item
+    db.session.commit()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py:597: in commit
+    return self._proxied.commit()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2028: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4352: in flush
+    self._flush(objects)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4487: in _flush
+    with util.safe_reraise():
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4448: in _flush
+    flush_context.execute()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x10985cec0>
+statement = 'INSERT INTO menu_item (name, description) VALUES (?, ?)'
+parameters = ('Test Item', 'Test Description')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x106b026f0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: menu_item
+E       [SQL: INSERT INTO menu_item (name, description) VALUES (?, ?)]
+E       [parameters: ('Test Item', 'Test Description')]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+_____________________________ test_get_item_by_id ______________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x1082d43b0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x1082d6c90>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x108152060>
+parameters = [('Test Item', 'Test Description')]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x108f272c0>
+statement = 'INSERT INTO menu_item (name, description) VALUES (?, ?)'
+parameters = ('Test Item', 'Test Description')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x1082d6c90>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: menu_item
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+client = <FlaskClient <Flask 'app'>>
+
+    def test_get_item_by_id(client):
+        # First, create an item
+        new_item = {"name": "Test Item", "description": "Test Description"}
+>       create_response = client.post('/menu_items', json=new_item)
+
+output_restaurant_mgmt_system_flask/test_script.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1167: in post
+    return self.open(*args, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/testing.py:235: in open
+    response = super().open(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1116: in open
+    response_parts = self.run_wsgi_app(request.environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:988: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1264: in run_wsgi_app
+    app_rv = app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1498: in __call__
+    return self.wsgi_app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1476: in wsgi_app
+    response = self.handle_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1473: in wsgi_app
+    response = self.full_dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:882: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:880: in full_dispatch_request
+    rv = self.dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:865: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+output_restaurant_mgmt_system_flask/app/routes.py:17: in create_menu_item
+    db.session.commit()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py:597: in commit
+    return self._proxied.commit()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2028: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4352: in flush
+    self._flush(objects)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4487: in _flush
+    with util.safe_reraise():
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4448: in _flush
+    flush_context.execute()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x108f272c0>
+statement = 'INSERT INTO menu_item (name, description) VALUES (?, ?)'
+parameters = ('Test Item', 'Test Description')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x1082d6c90>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: menu_item
+E       [SQL: INSERT INTO menu_item (name, description) VALUES (?, ?)]
+E       [parameters: ('Test Item', 'Test Description')]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+____________________________ test_delete_item_by_id ____________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x1082d5eb0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x1082d7d40>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x108152060>
+parameters = [('Test Item', 'Test Description')]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x1093ab5c0>
+statement = 'INSERT INTO menu_item (name, description) VALUES (?, ?)'
+parameters = ('Test Item', 'Test Description')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x1082d7d40>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: menu_item
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+client = <FlaskClient <Flask 'app'>>
+
+    def test_delete_item_by_id(client):
+        # First, create an item
+        new_item = {"name": "Test Item", "description": "Test Description"}
+>       create_response = client.post('/menu_items', json=new_item)
+
+output_restaurant_mgmt_system_flask/test_script.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1167: in post
+    return self.open(*args, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/testing.py:235: in open
+    response = super().open(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1116: in open
+    response_parts = self.run_wsgi_app(request.environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:988: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1264: in run_wsgi_app
+    app_rv = app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1498: in __call__
+    return self.wsgi_app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1476: in wsgi_app
+    response = self.handle_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1473: in wsgi_app
+    response = self.full_dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:882: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:880: in full_dispatch_request
+    rv = self.dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:865: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+output_restaurant_mgmt_system_flask/app/routes.py:17: in create_menu_item
+    db.session.commit()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py:597: in commit
+    return self._proxied.commit()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2028: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4352: in flush
+    self._flush(objects)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4487: in _flush
+    with util.safe_reraise():
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4448: in _flush
+    flush_context.execute()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1418: in execute
+    return meth(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:515: in _execute_on_connection
+    return connection._execute_clauseelement(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1640: in _execute_clauseelement
+    ret = self._execute_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x1080cfef0>
+cursor = <sqlite3.Cursor object at 0x1093ab5c0>
+statement = 'INSERT INTO menu_item (name, description) VALUES (?, ?)'
+parameters = ('Test Item', 'Test Description')
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x1082d7d40>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: menu_item
+E       [SQL: INSERT INTO menu_item (name, description) VALUES (?, ?)]
+E       [parameters: ('Test Item', 'Test Description')]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/engine/default.py:941: OperationalError
+__________________ test_handle_invalid_input_for_create_item ___________________
+
+client = <FlaskClient <Flask 'app'>>
+
+    def test_handle_invalid_input_for_create_item(client):
+        invalid_item = {"invalid_field": "Invalid Value"}
+>       response = client.post('/menu_items', json=invalid_item)
+
+output_restaurant_mgmt_system_flask/test_script.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1167: in post
+    return self.open(*args, **kw)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/testing.py:235: in open
+    response = super().open(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1116: in open
+    response_parts = self.run_wsgi_app(request.environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:988: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/werkzeug/test.py:1264: in run_wsgi_app
+    app_rv = app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1498: in __call__
+    return self.wsgi_app(environ, start_response)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1476: in wsgi_app
+    response = self.handle_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:1473: in wsgi_app
+    response = self.full_dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:882: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:880: in full_dispatch_request
+    rv = self.dispatch_request()
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask/app.py:865: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @bp.route('/menu_items', methods=['POST'])
+    def create_menu_item():
+        data = request.json
+>       new_item = MenuItem(name=data['name'], description=data.get('description', ''))
+E       KeyError: 'name'
+
+output_restaurant_mgmt_system_flask/app/routes.py:15: KeyError
+=========================== short test summary info ============================
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_get_all_items
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_create_new_item
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_get_item_by_id
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_delete_item_by_id
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_handle_invalid_input_for_create_item
+========================= 5 failed, 5 passed in 1.11s ==========================
