@@ -1021,25 +1021,7 @@ class Agent:
         traj_dir: Path | None = None,
         return_type: str = "info_trajectory",
         init_model_stats: APIStats | None = None,
-    ):
-        """
-        Run the agent on an environment.
-        Return the final value of the specified return type.
-
-        Args:
-            setup_args: Arguments to pass to the agent's setup method.
-            env: The environment to run the agent on.
-            observation: Output from environment setup
-            traj_dir: Directory to save the trajectory to
-            return_type: Controls what to return.
-                This should be left at `info_trajectory`, the
-                other values are for internal usage with subroutines.
-            init_model_stats: Initial model stats to use for the run.
-
-        Returns:
-            If return_type is "info_trajectory", returns a tuple of
-            the info dictionary and the trajectory (list of dictionaries).
-        """
+    ) -> tuple[dict[str, Any], Trajectory]:
         assert env.record is not None
         assert env.container_obj is not None
         if env.container_obj.id != self.last_container_id:
@@ -1062,13 +1044,26 @@ class Agent:
         for hook in self.hooks:
             hook.on_run_start()
         done = False
-        while not done:
-            observation, done = self._run_step(observation)
-            self.save_trajectory()
-            if done:
-                done = True
-        for hook in self.hooks:
-            hook.on_run_done(trajectory=self.trajectory, info=self.info)
+        last_valid_trajectory = None
+        last_valid_info = None
+        try:
+            while not done:
+                observation, done = self._run_step(observation)
+                self.save_trajectory()
+                last_valid_trajectory = self.trajectory
+                last_valid_info = self.info
+                if done:
+                    done = True
+        except KeyboardInterrupt:
+            self.logger.info("Keyboard interrupt detected in Agent.run")
+            if last_valid_trajectory is not None and last_valid_info is not None:
+                self.trajectory = last_valid_trajectory
+                self.info = last_valid_info
+            else:
+                raise
+        finally:
+            for hook in self.hooks:
+                hook.on_run_done(trajectory=self.trajectory, info=self.info)
 
         self.logger.info("Trajectory saved to %s", self.traj_path)
 

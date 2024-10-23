@@ -686,6 +686,13 @@ class SWEEnv(gym.Env):
         """
         self.logger.info("Beginning environment shutdown...")
         try:
+            # Before exiting, try to perform submit command to generate submission
+            try:
+                observation = self.communicate(input="submit")
+                submission = self.get_submission(observation)
+                self.step("submit")
+            except Exception as e:
+                self.logger.warning(f"Failed to submit during close: {e}")
             self.communicate(input="exit")
         except KeyboardInterrupt:
             raise
@@ -1438,7 +1445,7 @@ class SWEEnv(gym.Env):
         )
 
         owner, repo, _ = parse_gh_issue_url(issue_url)
-        # If `--repo_path` was specified with a different github URL, then the record will contain
+        # If `--get` was specified with a different github URL, then the record will contain
         # the forking user
         assert self.record is not None
         if self.record["repo_type"] != "github":

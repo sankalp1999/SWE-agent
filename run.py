@@ -4,6 +4,7 @@ import logging
 
 from sweagent import CONFIG_DIR
 from sweagent.utils.log import add_file_handler, get_logger
+from typing import Tuple, Any
 
 try:
     import rich
@@ -139,14 +140,6 @@ class _ContinueLoop(Exception):
 class MainHook:
     """Hook structure for the web server or other addons to interface with"""
 
-    @staticmethod
-    def _is_promising_patch(info: dict[str, Any]) -> bool:
-        """Do we actually believe that the patch will solve the issue?
-        Or are we just submitting the last patch we generated before hitting an error?
-        """
-        # The exit status can also be `submitted (exit_cost)` etc.
-        return info["exit_status"] == "submitted" and info.get("submission") is not None
-
     def on_init(self, *, args: ScriptArguments, agent: Agent, env: SWEEnv, traj_dir: Path):
         """Called when hook is initialized"""
 
@@ -171,6 +164,12 @@ class MainHook:
 class SaveApplyPatchHook(MainHook):
     """This hook saves patches to a separate directory and optionally applies them to a local repository."""
 
+
+    @staticmethod
+    def _is_promising_patch(info: dict[str, Any]) -> bool:
+        """Consider patches as promising if there's any patch-like content, even if not officially submitted."""
+        return info.get("submission") is not None or "patch" in info
+        
     def on_init(self, *, args: ScriptArguments, agent: Agent, env: SWEEnv, traj_dir: Path):
         self._traj_dir = traj_dir
         self._apply_patch_locally = args.actions.apply_patch_locally
@@ -180,19 +179,14 @@ class SaveApplyPatchHook(MainHook):
         self._instance = instance
 
     def on_instance_completed(self, *, info, trajectory):
-        assert self._instance is not None  # mypy
         instance_id = self._instance["instance_id"]
         patch_path = self._save_patch(instance_id, info)
-        if patch_path:
-            if not self._apply_patch_locally:
-                return
-            if not self._is_promising_patch(info):
-                return
-            assert self._instance  # mypy
+        if patch_path and self._apply_patch_locally:
             if self._instance["repo_type"] != "local":
                 return
             local_dir = Path(self._instance["repo"])
             self._apply_patch(patch_path, local_dir)
+
 
     @staticmethod
     def _print_patch_message(patch_output_file: Path):
@@ -228,6 +222,8 @@ class SaveApplyPatchHook(MainHook):
         patch_output_dir = self._traj_dir / "patches"
         patch_output_dir.mkdir(exist_ok=True, parents=True)
         patch_output_file = patch_output_dir / f"{instance_id}.patch"
+
+        
         if info.get("submission") is None:
             logger.info("No patch to save.")
             return None
@@ -253,6 +249,8 @@ class SaveApplyPatchHook(MainHook):
             logger.error(f"Failed to apply patch {patch_file} to {local_dir}: {e}")
             return
         logger.info(f"Applied patch {patch_file} to {local_dir}")
+
+
 
 
 class OpenPRHook(MainHook):
@@ -333,91 +331,112 @@ class Main:
         hook.on_init(args=self.args, agent=self.agent, env=self.env, traj_dir=self.traj_dir)
         self.hooks.append(hook)
 
-    def run(self, index: int) -> None:
-        # Reset environment
-        instance_id = self.env.data[index]["instance_id"]
-        for hook in self.hooks:
-            hook.on_instance_start(index=index, instance=self.env.data[index])
-        assert isinstance(instance_id, str)  # mypy
-        if self.should_skip(instance_id):
+    def run(self, index: int) -> Tuple[Any, Any]:
+        last_valid_info = None
+        last_valid_trajectory = None
+        try:
+            # Reset environment
+            instance_id = self.env.data[index]["instance_id"]
             for hook in self.hooks:
-                hook.on_instance_skipped()
-            raise _ContinueLoop
-        logger.info("▶️  Beginning task " + str(index))
+                hook.on_instance_start(index=index, instance=self.env.data[index])
+            assert isinstance(instance_id, str)  # mypy
+            if self.should_skip(instance_id):
+                for hook in self.hooks:
+                    hook.on_instance_skipped()
+                raise _ContinueLoop
+            logger.info("▶️  Beginning task " + str(index))
 
-        observation, info = self.env.reset(index)
-        if info is None:
-            raise _ContinueLoop
+            observation, info = self.env.reset(index)
+            if info is None:
+                raise _ContinueLoop
 
-        # Get info, patch information
-        issue = getattr(self.env, "query", None)
-        files = []
-        assert self.env.record is not None  # mypy
-        if "patch" in self.env.record:
-            files = "\n".join([f"- {x.path}" for x in PatchSet(self.env.record["patch"]).modified_files])
-        # Get test files, F2P tests information
-        test_files = []
-        if "test_patch" in self.env.record:
-            test_patch_obj = PatchSet(self.env.record["test_patch"])
-            test_files = "\n".join([f"- {x.path}" for x in test_patch_obj.modified_files + test_patch_obj.added_files])
-        tests = ""
-        if "FAIL_endTO_PASS" in self.env.record:
-            tests = "\n".join([f"- {x}" for x in self.env.record["FAIL_TO_PASS"]])
+            # Get info, patch information
+            issue = getattr(self.env, "query", None)
+            files = []
+            assert self.env.record is not None  # mypy
+            if "patch" in self.env.record:
+                files = "\n".join([f"- {x.path}" for x in PatchSet(self.env.record["patch"]).modified_files])
+            # Get test files, F2P tests information
+            test_files = []
+            if "test_patch" in self.env.record:
+                test_patch_obj = PatchSet(self.env.record["test_patch"])
+                test_files = "\n".join([f"- {x.path}" for x in test_patch_obj.modified_files + test_patch_obj.added_files])
+            tests = ""
+            if "FAIL_endTO_PASS" in self.env.record:
+                tests = "\n".join([f"- {x}" for x in self.env.record["FAIL_TO_PASS"]])
 
-        setup_args = {"issue": issue, "files": files, "test_files": test_files, "tests": tests}
-        challenge = self.env.challenge
-        if challenge is not None:
-            setup_args["flag_format"] = extract_flag_format(challenge["flag"])
-            setup_args["name"] = challenge["name"]
-            setup_args["description"] = challenge["description"]
-            setup_args["category_friendly"] = challenge["category_friendly"]
-            setup_args["points"] = challenge["points"]
-            setup_args["files"] = challenge["files"] or "No files included in this challenge."
-            setup_args["box"] = challenge.get("server_name")
-            setup_args["port"] = challenge.get("port")
-            setup_args["server_description"] = challenge.get("server_description")
-        info, trajectory = self.agent.run(
-            setup_args=setup_args,
-            env=self.env,
-            observation=observation,
-            traj_dir=self.traj_dir,
-            return_type="info_trajectory",
-        )
-        self._save_predictions(instance_id, info, challenge)
-        for hook in self.hooks:
-            hook.on_instance_completed(info=info, trajectory=trajectory)
+            setup_args = {"issue": issue, "files": files, "test_files": test_files, "tests": tests}
+            challenge = self.env.challenge
+            if challenge is not None:
+                setup_args["flag_format"] = extract_flag_format(challenge["flag"])
+                setup_args["name"] = challenge["name"]
+                setup_args["description"] = challenge["description"]
+                setup_args["category_friendly"] = challenge["category_friendly"]
+                setup_args["points"] = challenge["points"]
+                setup_args["files"] = challenge["files"] or "No files included in this challenge."
+                setup_args["box"] = challenge.get("server_name")
+                setup_args["port"] = challenge.get("port")
+                setup_args["server_description"] = challenge.get("server_description")
+            info, trajectory = self.agent.run(
+                setup_args=setup_args,
+                env=self.env,
+                observation=observation,
+                traj_dir=self.traj_dir,
+                return_type="info_trajectory",
+            )
+            last_valid_info = info
+            last_valid_trajectory = trajectory
+            self._save_predictions(instance_id, info, challenge)
+            for hook in self.hooks:
+                hook.on_instance_completed(info=info, trajectory=trajectory)
+            return info, trajectory
+        except KeyboardInterrupt:
+            logger.info("Keyboard interrupt detected in run method")
+            if last_valid_info is not None and last_valid_trajectory is not None:
+                print("returning last valid info and trajectory")
+                return last_valid_info, last_valid_trajectory
+            print("last valid info: ", last_valid_info)
+            print("last valid trajectory: ", last_valid_trajectory)
+            raise
 
     def main(self):
+        info = None
+        trajectory = None
         for hook in self.hooks:
             hook.on_start()
-        for index in range(len(self.env.data)):
-            try:
-                self.run(index)
-            except _ContinueLoop:
-                continue
-            except KeyboardInterrupt:
-                logger.info("Exiting InterCode environment...")
-                self.env.close()
-                break
-            except SystemExit:
-                logger.critical("❌ Exiting because SystemExit was called")
-                self.env.close()
-                logger.info("Container closed")
-                raise
-            except Exception as e:
-                logger.warning(traceback.format_exc())
-                if self.args.raise_exceptions:
-                    self.env.close()
-                    raise e
-                if self.env.record:
-                    logger.warning(f"❌ Failed on {self.env.record['instance_id']}: {e}")
-                else:
-                    logger.warning("❌ Failed on unknown instance")
-                self.env.reset_container()
-                continue
-        self.env.close()
-        for hook in self.hooks:
-            hook.on_end()
+        try:
+            for index in range(len(self.env.data)):
+                try:
+                    info, trajectory = self.run(index)
+                except _ContinueLoop:
+                    continue
+                except KeyboardInterrupt:
+                    logger.info("Exiting InterCode environment due to KeyboardInterrupt...")
+                    break
+                except SystemExit:
+                    logger.critical("❌ Exiting because SystemExit was called")
+                    break
+                except Exception as e:
+                    logger.warning(traceback.format_exc())
+                    if self.args.raise_exceptions:
+                        self.env.close()
+                        raise e
+                    if self.env.record:
+                        logger.warning(f"❌ Failed on {self.env.record['instance_id']}: {e}")
+                    else:
+                        logger.warning("❌ Failed on unknown instance")
+                    self.env.reset_container()
+                    continue
+        except KeyboardInterrupt:
+            logger.info("Keyboard interrupt detected in main method")
+        finally:
+            self.env.close()
+            if info is not None and trajectory is not None:
+                print("on_instance_completed in finally")
+                for hook in self.hooks:
+                    hook.on_instance_completed(info=info, trajectory=trajectory)
+            for hook in self.hooks:
+                hook.on_end()
 
     def _save_arguments(self) -> None:
         """Save the arguments to a yaml file to the run's trajectory directory."""
@@ -547,3 +566,4 @@ def main(args: ScriptArguments):
 
 if __name__ == "__main__":
     main(get_args())
+
