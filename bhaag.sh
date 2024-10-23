@@ -4,7 +4,7 @@
 # Run the SWE-agent
 python run.py \
 --model_name claude-sonnet-3.5 \
---repo_path output_restaurant_mgmt_system_flask \
+--repo_path ../output_restaurant_mgmt_system_flask \
 --data_path issues/issue.md \
 --config_file config/codegen.yaml \
 --per_instance_cost_limit 4.00 \

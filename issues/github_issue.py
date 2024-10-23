@@ -26,7 +26,7 @@ def main():
         print(f"Error: The file '{test_output_file}' does not exist.")
         sys.exit(1)
 
-    prompt_text = f"""Given the test output below, summarize the test failures in the format of a GitHub issue. Include:
+    prompt_text = f"""Given the test output below, summarize the most important and only one test failure in the format of a GitHub issue. Include:
 Test file name: {test_output_file}
 The total number of tests collected, passed, and failed.
 A list of passed tests.
@@ -44,7 +44,7 @@ Test Output:
 
     # Use f-string to inject test_output into the message content
     response = completion(
-        model="claude-3-5-sonnet-20240620",
+        model="claude-3-5-sonnet-20241022",
         max_tokens=8192,
         temperature=0,
         messages=[
