@@ -334,7 +334,7 @@ class Main:
         self.hooks.append(hook)
 
     def run(self, index: int) -> None:
-        # Reset environment
+    # Reset environment
         instance_id = self.env.data[index]["instance_id"]
         for hook in self.hooks:
             hook.on_instance_start(index=index, instance=self.env.data[index])
@@ -376,16 +376,36 @@ class Main:
             setup_args["box"] = challenge.get("server_name")
             setup_args["port"] = challenge.get("port")
             setup_args["server_description"] = challenge.get("server_description")
-        info, trajectory = self.agent.run(
-            setup_args=setup_args,
-            env=self.env,
-            observation=observation,
-            traj_dir=self.traj_dir,
-            return_type="info_trajectory",
-        )
-        self._save_predictions(instance_id, info, challenge)
-        for hook in self.hooks:
-            hook.on_instance_completed(info=info, trajectory=trajectory)
+
+        #  wrap in try / except to catch any exceptions
+        # earlier this was not there
+        # we force step(submit) here
+        try:
+            info, trajectory = self.agent.run(
+                setup_args=setup_args,
+                env=self.env,
+                observation=observation,
+                traj_dir=self.traj_dir,
+                return_type="info_trajectory",
+            )
+            self._save_predictions(instance_id, info, challenge)
+            for hook in self.hooks:
+                hook.on_instance_completed(info=info, trajectory=trajectory)
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt caught during agent.run(). Submitting and closing the environment.")
+            # Force submission
+            try:
+                observation, reward, done, info = self.env.step("submit")
+                # Save the submission and trajectory
+                self.agent.info.update(info)
+                self.agent.save_trajectory()
+                # Save predictions if necessary
+                self._save_predictions(instance_id, info, challenge)
+            except Exception as e:
+                logger.error(f"Failed to submit: {e}")
+            # Re-raise if necessary, or simply return
+            return
+
 
     def main(self):
         for hook in self.hooks:
@@ -396,7 +416,7 @@ class Main:
             except _ContinueLoop:
                 continue
             except KeyboardInterrupt:
-                logger.info("Exiting InterCode environment...")
+                logger.info("KeyboardInterrupt caught in Main.main(). Closing the environment.")
                 self.env.close()
                 break
             except SystemExit:
