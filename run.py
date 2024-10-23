@@ -401,6 +401,11 @@ class Main:
                 self.agent.save_trajectory()
                 # Save predictions if necessary
                 self._save_predictions(instance_id, info, challenge)
+                
+                # Call hooks to apply patch if configured
+                for hook in self.hooks:
+                    hook.on_instance_completed(info=info, trajectory=self.agent.trajectory)
+                
             except Exception as e:
                 logger.error(f"Failed to submit: {e}")
             # Re-raise if necessary, or simply return
@@ -567,3 +572,4 @@ def main(args: ScriptArguments):
 
 if __name__ == "__main__":
     main(get_args())
+
