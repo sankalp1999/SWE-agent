@@ -39,20 +39,23 @@ instance_template: |-
   NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line!
 
   IMPORTANT TIPS:
-  1. Submit and exit if you solved the issue or solved more than 60% of the tests from test_script.py. Do not modify requirements.txt or test_script.py.
+  1. When you edit an existing file, try to minimize the changes you make to the file.
 
-  2. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
+  2. Submit and exit if you solved the issue or solved more than 60% of the tests from test_script.py. Do not modify requirements.txt or test_script.py.
 
-  3. If you open a file and need to get to an area around a specific line that is not in the first 100 lines, say line 583, don't just use the scroll_down command multiple times. Instead, use the goto 583 command. It's much quicker.
+  3. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
 
-  4. If the bug reproduction script requires inputting/reading a specific file, such as buggy-input.png, and you'd like to understand how to input that file, conduct a search in the existing repo code, to see whether someone else has already done that. Do this by running the command: find_file "buggy-input.png" If that doesn't work, use the linux 'find' command.
+  4. If you open a file and need to get to an area around a specific line that is not in the first 100 lines, say line 583, don't just use the scroll_down command multiple times. Instead, use the goto 583 command. It's much quicker.
 
-  5. Always make sure to look at the currently open file and the current working directory (which appears right after the currently open file). The currently open file might be in a different directory than the working directory! Note that some commands, such as 'create', open files, so they might change the current  open file.
+  5. If the bug reproduction script requires inputting/reading a specific file, such as buggy-input.png, and you'd like to understand how to input that file, conduct a search in the existing repo code, to see whether someone else has already done that. Do this by running the command: find_file "buggy-input.png" If that doesn't work, use the linux 'find' command.
 
-  6. When editing files, it is easy to accidentally specify a wrong line number or to write code with incorrect indentation. Always check the code after you issue an edit to make sure that it reflects what you wanted to accomplish. If it didn't, issue another command to fix it.
+  6. Always make sure to look at the currently open file and the current working directory (which appears right after the currently open file). The currently open file might be in a different directory than the working directory! Note that some commands, such as 'create', open files, so they might change the current  open file.
 
-  7. The file from which the tests should pass is `test_script.py`. Do not move the `test_script.py` file. Use `pytest test_script.py` to run the tests.
+  7. When editing files, it is easy to accidentally specify a wrong line number or to write code with incorrect indentation. Always check the code after you issue an edit to make sure that it reflects what you wanted to accomplish. If it didn't, issue another command to fix it.
 
+  8. The file from which the tests should pass is `test_script.py`. Do not move the `test_script.py` file. Use `pytest test_script.py` to run the tests.
+
+  9. YOU CAN SOLVE THE ISSUE BY YOURSELF COMPLETELY - I TRUST IN YOU!
 
   (Open file: {open_file})
   (Current directory: {working_dir})
