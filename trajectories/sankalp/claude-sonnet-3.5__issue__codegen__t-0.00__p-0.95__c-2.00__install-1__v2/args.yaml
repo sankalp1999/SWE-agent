@@ -590,4 +590,4 @@ instance_filter: .*
 print_config: true
 raise_exceptions: false
 skip_existing: false
-suffix: v1
+suffix: v2
