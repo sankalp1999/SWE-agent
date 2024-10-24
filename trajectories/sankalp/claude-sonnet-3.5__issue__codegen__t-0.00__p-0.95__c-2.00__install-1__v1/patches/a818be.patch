@@ -1,0 +1,65 @@
+
+diff --git a/app/__init__.py b/app/__init__.py
+index 8036d13..8ac755e 100644
+--- a/app/__init__.py
++++ b/app/__init__.py
+@@ -9,7 +9,7 @@ db = SQLAlchemy()
+ 
+ def create_app():
+     app = Flask(__name__)
+-    app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL')
++    app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL', 'sqlite:///restaurant.db')
+     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+ 
+     db.init_app(app)
+@@ -18,3 +18,5 @@ def create_app():
+     app.register_blueprint(menu_items_bp)
+ 
+     return app
++
++app = create_app()
+diff --git a/app/models.py b/app/models.py
+index bc57ca9..01bcdbd 100644
+--- a/app/models.py
++++ b/app/models.py
+@@ -2,14 +2,21 @@ from app import db
+ 
+ class MenuItem(db.Model):
+     __tablename__ = 'menu_items'
+-
++    
+     id = db.Column(db.Integer, primary_key=True)
+     name = db.Column(db.String(100), nullable=False)
+-    description = db.Column(db.String(500))
+-
++    description = db.Column(db.Text)
++    price = db.Column(db.Float, nullable=False)
++    category = db.Column(db.String(50))
++    
++    def __repr__(self):
++        return f'<MenuItem {self.name}>'
++    
+     def to_dict(self):
+         return {
+             'id': self.id,
+             'name': self.name,
+-            'description': self.description
++            'description': self.description,
++            'price': self.price,
++            'category': self.category
+         }
+diff --git a/app/routes.py b/app/routes.py
+index 8feab93..7c22d31 100644
+--- a/app/routes.py
++++ b/app/routes.py
+@@ -18,7 +18,9 @@ def create_menu_item():
+ 
+     menu_item = MenuItem(
+         name=data['name'],
+-        description=data.get('description', '')
++        description=data.get('description', ''),
++        price=data.get('price', 0.0),
++        category=data.get('category', '')
+     )
+     
+     db.session.add(menu_item)
