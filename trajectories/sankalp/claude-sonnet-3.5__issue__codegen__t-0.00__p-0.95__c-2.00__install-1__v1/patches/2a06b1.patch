@@ -1,0 +1,107 @@
+
+diff --git a/app/__init__.py b/app/__init__.py
+index 8036d13..e86c145 100644
+--- a/app/__init__.py
++++ b/app/__init__.py
+@@ -1,20 +1,12 @@
+ from flask import Flask
+ from flask_sqlalchemy import SQLAlchemy
+ from os import environ
+-from dotenv import load_dotenv
+ 
+-load_dotenv()
++app = Flask(__name__)
++app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///restaurant.db'
++app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+ 
+-db = SQLAlchemy()
++db = SQLAlchemy(app)
+ 
+-def create_app():
+-    app = Flask(__name__)
+-    app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL')
+-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+-
+-    db.init_app(app)
+-
+-    from app.routes import menu_items_bp
+-    app.register_blueprint(menu_items_bp)
+-
+-    return app
++from app.routes import menu_items_bp
++app.register_blueprint(menu_items_bp)
+diff --git a/app/database.py b/app/database.py
+index 2fa6c05..568b591 100644
+--- a/app/database.py
++++ b/app/database.py
+@@ -1,7 +1,6 @@
+-from app import db, create_app
++from app import db, app
+ 
+ def init_db():
+-    app = create_app()
+     with app.app_context():
+         db.create_all()
+ 
+diff --git a/app/models.py b/app/models.py
+index bc57ca9..c3b92e1 100644
+--- a/app/models.py
++++ b/app/models.py
+@@ -2,11 +2,11 @@ from app import db
+ 
+ class MenuItem(db.Model):
+     __tablename__ = 'menu_items'
++    __table_args__ = {'extend_existing': True}
+ 
+     id = db.Column(db.Integer, primary_key=True)
+     name = db.Column(db.String(100), nullable=False)
+     description = db.Column(db.String(500))
+-
+     def to_dict(self):
+         return {
+             'id': self.id,
+diff --git a/output_restaurant_mgmt_system_flask/app/__init__.py b/output_restaurant_mgmt_system_flask/app/__init__.py
+new file mode 100644
+index 0000000..895bad4
+--- /dev/null
++++ b/output_restaurant_mgmt_system_flask/app/__init__.py
+@@ -0,0 +1,11 @@
++from flask import Flask
++from flask_sqlalchemy import SQLAlchemy
++
++app = Flask(__name__)
++app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///restaurant.db'
++app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
++
++db = SQLAlchemy(app)
++
++from app.routes import menu_items_bp
++app.register_blueprint(menu_items_bp)
+diff --git a/tests/test_routes.py b/tests/test_routes.py
+index d3e3fc2..a197135 100644
+--- a/tests/test_routes.py
++++ b/tests/test_routes.py
+@@ -1,10 +1,9 @@
+ import pytest
+-from app import create_app, db
++from app import app, db
+ from app.models import MenuItem
+ 
+ @pytest.fixture
+-def app():
+-    app = create_app()
++def test_app():
+     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+     app.config['TESTING'] = True
+     
+@@ -15,8 +14,8 @@ def app():
+         db.drop_all()
+ 
+ @pytest.fixture
+-def client(app):
+-    return app.test_client()
++def client(test_app):
++    return test_app.test_client()
+ 
+ def test_get_menu_items(client):
+     response = client.get('/menu_items')

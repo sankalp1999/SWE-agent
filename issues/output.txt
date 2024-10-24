@@ -1,0 +1,220 @@
+Error running test_script.py: ============================= test session starts ==============================
+platform darwin -- Python 3.12.6, pytest-8.3.3, pluggy-1.5.0 -- /Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/sankalp/Documents/question_generator/project_question_generator/project_questions
+configfile: pyproject.toml
+plugins: anyio-4.6.0
+collecting ... collected 8 items
+
+output_restaurant_mgmt_system_flask/test_script.py::test_directory_structure PASSED [ 12%]
+output_restaurant_mgmt_system_flask/test_script.py::test_file_existence PASSED [ 25%]
+output_restaurant_mgmt_system_flask/test_script.py::test_init_file_contents FAILED [ 37%]
+output_restaurant_mgmt_system_flask/test_script.py::test_models_file_contents PASSED [ 50%]
+output_restaurant_mgmt_system_flask/test_script.py::test_routes_file_contents FAILED [ 62%]
+output_restaurant_mgmt_system_flask/test_script.py::test_database_file_contents PASSED [ 75%]
+output_restaurant_mgmt_system_flask/test_script.py::test_test_routes_file_contents FAILED [ 87%]
+output_restaurant_mgmt_system_flask/test_script.py::test_flask_dependencies PASSED [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_init_file_contents ____________________________
+
+    def test_init_file_contents():
+        """Test Flask application initialization in __init__.py"""
+        init_path = project_root / "app" / "__init__.py"
+        module = import_module(init_path)
+    
+>       assert hasattr(module, "app"), "Flask application instance not found"
+E       AssertionError: Flask application instance not found
+E       assert False
+E        +  where False = hasattr(<module '__init__' from '/Users/sankalp/Documents/question_generator/project_question_generator/project_questions/python-codegen/output_restaurant_mgmt_system_flask/app/__init__.py'>, 'app')
+
+output_restaurant_mgmt_system_flask/test_script.py:51: AssertionError
+__________________________ test_routes_file_contents ___________________________
+
+    def test_routes_file_contents():
+        """Test route definitions in routes.py"""
+        routes_path = project_root / "app" / "routes.py"
+>       module = import_module(routes_path)
+
+output_restaurant_mgmt_system_flask/test_script.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+output_restaurant_mgmt_system_flask/test_script.py:18: in import_module
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:995: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+output_restaurant_mgmt_system_flask/app/routes.py:2: in <module>
+    from app.models import MenuItem
+output_restaurant_mgmt_system_flask/app/models.py:3: in <module>
+    class MenuItem(db.Model):
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:92: in __init__
+    super().__init__(name, bases, d, **kwargs)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:144: in __init__
+    super().__init__(name, bases, d, **kwargs)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_api.py:196: in __init__
+    _as_declarative(reg, cls, dict_)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:244: in _as_declarative
+    return _MapperConfig.setup_mapping(registry, cls, dict_, None, {})
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:325: in setup_mapping
+    return _ClassScanMapperConfig(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:576: in __init__
+    self._setup_table(table)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:1749: in _setup_table
+    table_cls(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:171: in __table_cls__
+    return sa.Table(*args, **kwargs)
+<string>:2: in __new__
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:427: in __new__
+    return cls._new(*args, **kw)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'sqlalchemy.sql.schema.Table'>
+args = (Column('id', Integer(), table=None, primary_key=True, nullable=False), Column('name', String(length=100), table=None, nullable=False), Column('description', String(length=500), table=None))
+kw = {}, name = 'menu_items', metadata = MetaData(), schema = None
+keep_existing = False, extend_existing = False, must_exist = False
+key = 'menu_items'
+
+    @classmethod
+    def _new(cls, *args: Any, **kw: Any) -> Any:
+        if not args and not kw:
+            # python3k pickle seems to call this
+            return object.__new__(cls)
+    
+        try:
+            name, metadata, args = args[0], args[1], args[2:]
+        except IndexError:
+            raise TypeError(
+                "Table() takes at least two positional-only "
+                "arguments 'name' and 'metadata'"
+            )
+    
+        schema = kw.get("schema", None)
+        if schema is None:
+            schema = metadata.schema
+        elif schema is BLANK_SCHEMA:
+            schema = None
+        keep_existing = kw.get("keep_existing", False)
+        extend_existing = kw.get("extend_existing", False)
+    
+        if keep_existing and extend_existing:
+            msg = "keep_existing and extend_existing are mutually exclusive."
+            raise exc.ArgumentError(msg)
+    
+        must_exist = kw.pop("must_exist", kw.pop("mustexist", False))
+        key = _get_table_key(name, schema)
+        if key in metadata.tables:
+            if not keep_existing and not extend_existing and bool(args):
+>               raise exc.InvalidRequestError(
+                    f"Table '{key}' is already defined for this MetaData "
+                    "instance.  Specify 'extend_existing=True' "
+                    "to redefine "
+                    "options and columns on an "
+                    "existing Table object."
+                )
+E               sqlalchemy.exc.InvalidRequestError: Table 'menu_items' is already defined for this MetaData instance.  Specify 'extend_existing=True' to redefine options and columns on an existing Table object.
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:459: InvalidRequestError
+________________________ test_test_routes_file_contents ________________________
+
+    def test_test_routes_file_contents():
+        """Test the existence of required test cases in test_routes.py"""
+        test_path = project_root / "tests" / "test_routes.py"
+>       module = import_module(test_path)
+
+output_restaurant_mgmt_system_flask/test_script.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+output_restaurant_mgmt_system_flask/test_script.py:18: in import_module
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:995: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+output_restaurant_mgmt_system_flask/tests/test_routes.py:3: in <module>
+    from app.models import MenuItem
+output_restaurant_mgmt_system_flask/app/models.py:3: in <module>
+    class MenuItem(db.Model):
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:92: in __init__
+    super().__init__(name, bases, d, **kwargs)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:144: in __init__
+    super().__init__(name, bases, d, **kwargs)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_api.py:196: in __init__
+    _as_declarative(reg, cls, dict_)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:244: in _as_declarative
+    return _MapperConfig.setup_mapping(registry, cls, dict_, None, {})
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:325: in setup_mapping
+    return _ClassScanMapperConfig(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:576: in __init__
+    self._setup_table(table)
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py:1749: in _setup_table
+    table_cls(
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:171: in __table_cls__
+    return sa.Table(*args, **kwargs)
+<string>:2: in __new__
+    ???
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:427: in __new__
+    return cls._new(*args, **kw)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'sqlalchemy.sql.schema.Table'>
+args = (Column('id', Integer(), table=None, primary_key=True, nullable=False), Column('name', String(length=100), table=None, nullable=False), Column('description', String(length=500), table=None))
+kw = {}, name = 'menu_items', metadata = MetaData(), schema = None
+keep_existing = False, extend_existing = False, must_exist = False
+key = 'menu_items'
+
+    @classmethod
+    def _new(cls, *args: Any, **kw: Any) -> Any:
+        if not args and not kw:
+            # python3k pickle seems to call this
+            return object.__new__(cls)
+    
+        try:
+            name, metadata, args = args[0], args[1], args[2:]
+        except IndexError:
+            raise TypeError(
+                "Table() takes at least two positional-only "
+                "arguments 'name' and 'metadata'"
+            )
+    
+        schema = kw.get("schema", None)
+        if schema is None:
+            schema = metadata.schema
+        elif schema is BLANK_SCHEMA:
+            schema = None
+        keep_existing = kw.get("keep_existing", False)
+        extend_existing = kw.get("extend_existing", False)
+    
+        if keep_existing and extend_existing:
+            msg = "keep_existing and extend_existing are mutually exclusive."
+            raise exc.ArgumentError(msg)
+    
+        must_exist = kw.pop("must_exist", kw.pop("mustexist", False))
+        key = _get_table_key(name, schema)
+        if key in metadata.tables:
+            if not keep_existing and not extend_existing and bool(args):
+>               raise exc.InvalidRequestError(
+                    f"Table '{key}' is already defined for this MetaData "
+                    "instance.  Specify 'extend_existing=True' "
+                    "to redefine "
+                    "options and columns on an "
+                    "existing Table object."
+                )
+E               sqlalchemy.exc.InvalidRequestError: Table 'menu_items' is already defined for this MetaData instance.  Specify 'extend_existing=True' to redefine options and columns on an existing Table object.
+
+/Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:459: InvalidRequestError
+=============================== warnings summary ===============================
+python-codegen/output_restaurant_mgmt_system_flask/test_script.py::test_test_routes_file_contents
+  /Users/sankalp/Library/Caches/pypoetry/virtualenvs/question-generator-vbflWcj1-py3.12/lib/python3.12/site-packages/flask_sqlalchemy/model.py:144: SAWarning: This declarative base already contains a class with the same class name and module name as app.models.MenuItem, and will be replaced in the string-lookup table.
+    super().__init__(name, bases, d, **kwargs)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_init_file_contents
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_routes_file_contents
+FAILED output_restaurant_mgmt_system_flask/test_script.py::test_test_routes_file_contents
+==================== 3 failed, 5 passed, 1 warning in 0.36s ====================
