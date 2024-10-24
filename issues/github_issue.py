@@ -27,17 +27,12 @@ def main():
         sys.exit(1)
 
     prompt_text = f"""Given the test output below, summarize the most important and only one test failure in the format of a GitHub issue. Include:
-Test file name: {test_output_file}
-The total number of tests collected, passed, and failed.
-A list of passed tests.
-For each failed test:
+Test file name: test_script.py
 The error message, including relevant stack trace snippets.
 The filename and line number where the error originated.
 An explanation of the error.
 Additional details or patterns observed in the failures.
 Possible causes and solutions for the failures.
-
-
 Provide just the content of the issue.md file and no other explanation.
 Test Output:
 {test_output}"""

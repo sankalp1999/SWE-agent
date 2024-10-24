@@ -6,9 +6,11 @@ python run.py \
 --repo_path ../output_restaurant_mgmt_system_flask \
 --data_path issues/issue.md \
 --config_file config/codegen.yaml \
---per_instance_cost_limit 4.00 \
+--per_instance_cost_limit 2.00 \
 --apply_patch_locally \
---environment_setup config/environment_setup/codegen_dependencies.yaml
+--environment_setup config/environment_setup/codegen_dependencies.yaml \
+--skip_existing=false \
+--suffix=v1
 
 # Parameter explanations:
 # --model_name claude-3-sonnet-20240229  # The Claude 3 Sonnet model (latest version)
