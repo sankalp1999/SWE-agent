@@ -10,7 +10,7 @@ python run.py \
 --apply_patch_locally \
 --environment_setup config/environment_setup/codegen_dependencies.yaml \
 --skip_existing=false \
---suffix=v1
+--suffix=v2
 
 # Parameter explanations:
 # --model_name claude-3-sonnet-20240229  # The Claude 3 Sonnet model (latest version)
@@ -20,3 +20,5 @@ python run.py \
 # --per_instance_cost_limit 4.00         # Maximum cost limit per instance in dollars
 # --apply_patch_locally                  # Apply generated patches to the repository
 # --environment_setup ...                # Python dependencies setup (Flask, pytest, etc.)
+# --skip_existing=false                  # Overwrite trajectory if an instance already exists
+# --suffix=v2                            # Suffix for the trajectory file (can use it indicate different versions of the same prompt)
